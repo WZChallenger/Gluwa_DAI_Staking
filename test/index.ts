@@ -48,6 +48,7 @@ describe("DAIStaking", function () {
 
     expect(parseInt(rewards)).to.greaterThanOrEqual(130);
     expect(parseInt(rewards)).to.lessThanOrEqual(135);
+
     console.log('Rewards for 100: ', rewards.toString());
   });
 });
