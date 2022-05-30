@@ -27,10 +27,7 @@ contract DAIStaking {
 
     event Deposit(address indexed user, uint256 amount);
 
-    constructor(
-        yDAIToken _govToken,
-        address _lpToken
-    ) {
+    constructor(yDAIToken _govToken, address _lpToken) {
         govToken = _govToken;
         lpToken = IERC20(_lpToken);
     }
@@ -39,22 +36,27 @@ contract DAIStaking {
         uint256 GovTokenForFarmer = getReward(_amount);
 
         govToken.mint(address(_holder), GovTokenForFarmer);
-        
-				UserInfo storage user = userInfo[_holder];
-				user.rewardDebt = user.rewardDebt.add(GovTokenForFarmer);
+
+        UserInfo storage user = userInfo[_holder];
+        user.rewardDebt = user.rewardDebt.add(GovTokenForFarmer);
     }
 
-    function getReward(uint256 _amount)
-        public
-        view
-        returns (uint256)
-    {
+    function getReward(uint256 _amount) public view returns (uint256) {
         uint256 amount = 0;
 
-        if (block.timestamp >= START_TIMESTAMP && block.timestamp <= END_TIMESTAMP) {
-        	amount = END_TIMESTAMP.sub(block.timestamp).mul(1e12).div(365 days).mul(135).mul(_amount).div(1e14);
-				} else {
-          amount = _amount.mul(112).div(100);
+        if (
+            block.timestamp >= START_TIMESTAMP &&
+            block.timestamp <= END_TIMESTAMP
+        ) {
+            amount = END_TIMESTAMP
+                .sub(block.timestamp)
+                .mul(1e12)
+                .div(365 days)
+                .mul(135)
+                .mul(_amount)
+                .div(1e14);
+        } else {
+            amount = _amount.mul(112).div(100);
         }
 
         return amount;
@@ -74,37 +76,34 @@ contract DAIStaking {
         );
 
         UserInfo storage user = userInfo[msg.sender];
-				user.amount = user.amount.add(_amount);
+        user.amount = user.amount.add(_amount);
 
         emit Deposit(msg.sender, _amount);
 
-				harvestRewards(msg.sender, _amount);
+        harvestRewards(msg.sender, _amount);
     }
 
     function lock(uint256 _newStartTimestamp, uint256 period) public {
-			require(
-				_newStartTimestamp > END_TIMESTAMP,
-				"DAIStaking::lock: lock period cannot be overlapped"
-			);
+        require(
+            _newStartTimestamp > END_TIMESTAMP,
+            "DAIStaking::lock: lock period cannot be overlapped"
+        );
 
-			require(
-				period > 0,
-				"DAIStaking::lock: period must be greater than 0"
-			);
+        require(period > 0, "DAIStaking::lock: period must be greater than 0");
 
-			START_TIMESTAMP = _newStartTimestamp;
-			END_TIMESTAMP = START_TIMESTAMP.add(period);
+        START_TIMESTAMP = _newStartTimestamp;
+        END_TIMESTAMP = START_TIMESTAMP.add(period);
     }
 
-		// claim govtoken
-		function exchange() public {
+    // claim govtoken
+    function exchange() public {
         UserInfo storage user = userInfo[msg.sender];
 
-				require(
-					user.rewardDebt > 0,
-					"DAIStaking::lock: no supplied any amount"
-				);
+        require(
+            user.rewardDebt > 0,
+            "DAIStaking::lock: no supplied any amount"
+        );
 
-				govToken.burn(msg.sender, user.rewardDebt);
-		}
+        govToken.burn(msg.sender, user.rewardDebt);
+    }
 }
